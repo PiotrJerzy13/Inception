@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    env_file:
+      - .env
+    networks:
+      - inception
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
+    env_file:
+      - .env
+    networks:
+      - inception
+    volumes:
+      - wordpress_data:/var/www/html
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    env_file:
+      - .env
+    networks:
+      - inception
+    volumes:
+      - wordpress_data:/var/www/html:ro
+      - static_data:/usr/share/nginx/html:ro
+    ports:
+      - "443:443"
+    depends_on:
+      - wordpress
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:443", "--insecure"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  adminer:
+    container_name: adminer
+    build: ./requirements/bonus/adminer
+    env_file:
+      - .env
+    networks:
+      - inception
+      - bonus
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - mariadb
+
+  redis:
+    container_name: redis
+    build: ./requirements/bonus/redis
+    env_file:
+      - .env
+    networks:
+      - inception
+      - bonus
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ftp:
+    container_name: ftp
+    build: ./requirements/bonus/ftp
+    env_file:
+      - .env
+    networks:
+      - inception
+      - bonus
+    volumes:
+      - wordpress_data:/var/www/html
+      - ftp_data:/home/ftpuser
+    ports:
+      - "21:21"
+      - "30000-30010:30000-30010"
+    restart: always
+    depends_on:
+      - wordpress
+
+networks:
+  inception:
+  bonus:
+
+volumes:
+  mariadb_data:
+  wordpress_data:
+  redis_data:
+  static_data:
+  ftp_data:
