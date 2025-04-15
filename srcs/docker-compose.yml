@@ -19,10 +19,11 @@ services:
       - mariadb_data:/var/lib/mysql
     restart: always
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD-SHELL", "mysqladmin ping -u root -p$(cat /run/secrets/db_root_password) | grep -q alive"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   wordpress:
     container_name: wordpress
@@ -73,19 +74,20 @@ services:
       retries: 3
       start_period: 10s
 
-  # adminer:
-  #   container_name: adminer
-  #   build: ./requirements/bonus/adminer
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - inception
-  #     - bonus
-  #   ports:
-  #     - "8080:8080"
-  #   restart: always
-  #   depends_on:
-  #     - mariadb
+  adminer:
+    container_name: adminer
+    build: ./requirements/bonus/adminer
+    env_file:
+      - .env
+    networks:
+      - inception
+      - bonus
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      mariadb:
+        condition: service_healthy
 
   # redis:
   #   container_name: redis
