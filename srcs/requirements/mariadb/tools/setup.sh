@@ -1,10 +1,16 @@
 #!/bin/sh
 set -e
 
+# Load secrets from Docker secrets if available
+[ -f "$MYSQL_ROOT_PASSWORD_FILE" ] && export MYSQL_ROOT_PASSWORD=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+[ -f "$MYSQL_PASSWORD_FILE" ] && export MYSQL_PASSWORD=$(cat "$MYSQL_PASSWORD_FILE")
+[ -f "$MYSQL_USER_FILE" ] && export MYSQL_USER=$(cat "$MYSQL_USER_FILE")
+
+# Prepare runtime directory
 mkdir -p /run/mysqld
 chown mysql:mysql /run/mysqld
 
-# Initialize DB only if empty
+# Initialize DB only if it doesn't exist
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "Initializing MariaDB..."
     mysql_install_db --user=mysql --datadir=/var/lib/mysql
@@ -26,5 +32,5 @@ else
     echo "MariaDB already initialized. Skipping setup."
 fi
 
-# Start MariaDB as mysql user
+# ▶ Start MariaDB in foreground (PID 1)
 exec mysqld --user=mysql --console

@@ -1,13 +1,20 @@
-version: '3.8'
-
 services:
   mariadb:
     container_name: mariadb
     build: ./requirements/mariadb
     env_file:
       - .env
+    secrets:
+      - db_root_password
+      - db_password
+      - credentials
     networks:
       - inception
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_USER_FILE: /run/secrets/credentials
     volumes:
       - mariadb_data:/var/lib/mysql
     restart: always
@@ -22,6 +29,14 @@ services:
     build: ./requirements/wordpress
     env_file:
       - .env
+    secrets:
+      - db_password
+      - credentials
+    environment:
+      WP_DB_NAME: ${WP_DB_NAME}
+      WP_DB_HOST: ${WP_DB_HOST}
+      WP_DB_USER_FILE: /run/secrets/credentials
+      WP_DB_PASSWORD_FILE: /run/secrets/db_password
     networks:
       - inception
     volumes:
@@ -31,7 +46,7 @@ services:
         condition: service_healthy
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
+      test: ["CMD-SHELL", "php-fpm81 -t || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -45,68 +60,77 @@ services:
       - inception
     volumes:
       - wordpress_data:/var/www/html:ro
-      - static_data:/usr/share/nginx/html:ro
+      - static_data:/usr/share/nginx/static:ro
     ports:
       - "443:443"
     depends_on:
       - wordpress
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://localhost:443", "--insecure"]
+      test: ["CMD", "curl", "-f", "-k", "https://localhost:443"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
 
-  adminer:
-    container_name: adminer
-    build: ./requirements/bonus/adminer
-    env_file:
-      - .env
-    networks:
-      - inception
-      - bonus
-    ports:
-      - "8080:8080"
-    restart: always
-    depends_on:
-      - mariadb
+  # adminer:
+  #   container_name: adminer
+  #   build: ./requirements/bonus/adminer
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - inception
+  #     - bonus
+  #   ports:
+  #     - "8080:8080"
+  #   restart: always
+  #   depends_on:
+  #     - mariadb
 
-  redis:
-    container_name: redis
-    build: ./requirements/bonus/redis
-    env_file:
-      - .env
-    networks:
-      - inception
-      - bonus
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    restart: always
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # redis:
+  #   container_name: redis
+  #   build: ./requirements/bonus/redis
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - inception
+  #     - bonus
+  #   volumes:
+  #     - redis_data:/data
+  #   ports:
+  #     - "6379:6379"
+  #   restart: always
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
-  ftp:
-    container_name: ftp
-    build: ./requirements/bonus/ftp
-    env_file:
-      - .env
-    networks:
-      - inception
-      - bonus
-    volumes:
-      - wordpress_data:/var/www/html
-      - ftp_data:/home/ftpuser
-    ports:
-      - "21:21"
-      - "30000-30010:30000-30010"
-    restart: always
-    depends_on:
-      - wordpress
+  # ftp:
+  #   container_name: ftp
+  #   build: ./requirements/bonus/ftp
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - inception
+  #     - bonus
+  #   volumes:
+  #     - wordpress_data:/var/www/html
+  #     - ftp_data:/home/ftpuser
+  #   ports:
+  #     - "21:21"
+  #     - "30000-30010:30000-30010"
+  #   restart: always
+  #   depends_on:
+  #     - wordpress
+
+secrets:
+  db_root_password:
+    file: ./secrets/db_root_password.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  credentials:
+    file: ./secrets/credentials.txt
 
 networks:
   inception:
