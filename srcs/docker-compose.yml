@@ -16,7 +16,7 @@ services:
       MYSQL_PASSWORD_FILE: /run/secrets/db_password
       MYSQL_USER_FILE: /run/secrets/credentials
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - ${HOME}/data/mariadb:/var/lib/mysql
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -u root -p$(cat /run/secrets/db_root_password) | grep -q alive"]
@@ -33,6 +33,7 @@ services:
     secrets:
       - db_password
       - credentials
+      - wp_admin_password
     environment:
       WP_DB_NAME: ${WP_DB_NAME}
       WP_DB_HOST: ${WP_DB_HOST}
@@ -41,7 +42,7 @@ services:
     networks:
       - inception
     volumes:
-      - wordpress_data:/var/www/html
+      - ${HOME}/data/wordpress:/var/www/html
     depends_on:
       mariadb:
         condition: service_healthy
@@ -60,8 +61,7 @@ services:
     networks:
       - inception
     volumes:
-      - wordpress_data:/var/www/html:ro
-      # - static_data:/usr/share/nginx/static:ro
+      - ${HOME}/data/wordpress:/var/www/html:ro
     ports:
       - "443:443"
     depends_on:
@@ -98,43 +98,6 @@ services:
       - "8081:80"
     restart: unless-stopped
 
-  # redis:
-  #   container_name: redis
-  #   build: ./requirements/bonus/redis
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - inception
-  #     - bonus
-  #   volumes:
-  #     - redis_data:/data
-  #   ports:
-  #     - "6379:6379"
-  #   restart: always
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-
-  # ftp:
-  #   container_name: ftp
-  #   build: ./requirements/bonus/ftp
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - inception
-  #     - bonus
-  #   volumes:
-  #     - wordpress_data:/var/www/html
-  #     - ftp_data:/home/ftpuser
-  #   ports:
-  #     - "21:21"
-  #     - "30000-30010:30000-30010"
-  #   restart: always
-  #   depends_on:
-  #     - wordpress
-
 secrets:
   db_root_password:
     file: ./secrets/db_root_password.txt
@@ -142,14 +105,9 @@ secrets:
     file: ./secrets/db_password.txt
   credentials:
     file: ./secrets/credentials.txt
+  wp_admin_password:
+    file: ./secrets/wp_admin_password.txt
 
 networks:
   inception:
   bonus:
-
-volumes:
-  mariadb_data:
-  wordpress_data:
-  redis_data:
-  static_data:
-  ftp_data:

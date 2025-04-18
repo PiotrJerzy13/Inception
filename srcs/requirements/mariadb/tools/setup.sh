@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-# Load secrets from Docker secrets if available
+# Load secrets from Docker secrets
 [ -f "$MYSQL_ROOT_PASSWORD_FILE" ] && export MYSQL_ROOT_PASSWORD=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
 [ -f "$MYSQL_PASSWORD_FILE" ] && export MYSQL_PASSWORD=$(cat "$MYSQL_PASSWORD_FILE")
 [ -f "$MYSQL_USER_FILE" ] && export MYSQL_USER=$(cat "$MYSQL_USER_FILE")

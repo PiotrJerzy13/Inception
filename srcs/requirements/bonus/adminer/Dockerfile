@@ -13,10 +13,8 @@ RUN apk add --no-cache \
 
 WORKDIR /var/www/localhost/htdocs
 
-# Download Adminer using wget instead of curl
 RUN wget -O index.php "https://www.adminer.org/latest-en.php"
 
-# Add a test file
 RUN echo "<?php phpinfo(); ?>" > info.php
 
 EXPOSE 8080
