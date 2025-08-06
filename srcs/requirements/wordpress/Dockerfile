@@ -41,5 +41,7 @@ COPY conf/www.conf /etc/php81/php-fpm.d/www.conf
 
 EXPOSE 9000
 
+VOLUME /var/www/html
+
 ENTRYPOINT ["/usr/local/bin/setup.sh"]
 CMD ["php-fpm81", "-F"]

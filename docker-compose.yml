@@ -1,7 +1,7 @@
 services:
   mariadb:
     container_name: mariadb
-    build: ./requirements/mariadb
+    build: ./srcs/requirements/mariadb
     env_file:
       - .env
     secrets:
@@ -27,7 +27,7 @@ services:
 
   wordpress:
     container_name: wordpress
-    build: ./requirements/wordpress
+    build: ./srcs/requirements/wordpress
     env_file:
       - .env
     secrets:
@@ -55,7 +55,7 @@ services:
 
   nginx:
     container_name: nginx
-    build: ./requirements/nginx
+    build: ./srcs/requirements/nginx
     env_file:
       - .env
     networks:
@@ -76,7 +76,7 @@ services:
 
   adminer:
     container_name: adminer
-    build: ./requirements/bonus/adminer
+    build: ./srcs/requirements/bonus/adminer
     env_file:
       - .env
     networks:
@@ -90,7 +90,7 @@ services:
         condition: service_healthy
   static:
     container_name: static
-    build: ./requirements/bonus/static
+    build: ./srcs/requirements/bonus/static
     networks:
       - inception
       - bonus
@@ -100,13 +100,13 @@ services:
 
 secrets:
   db_root_password:
-    file: ./secrets/db_root_password.txt
+    file: ./srcs/secrets/db_root_password.txt
   db_password:
-    file: ./secrets/db_password.txt
+    file: ./srcs/secrets/db_password.txt
   credentials:
-    file: ./secrets/credentials.txt
+    file: ./srcs/secrets/credentials.txt
   wp_admin_password:
-    file: ./secrets/wp_admin_password.txt
+    file: ./srcs/secrets/wp_admin_password.txt
 
 networks:
   inception:
