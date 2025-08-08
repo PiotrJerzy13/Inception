@@ -1,4 +1,4 @@
-NAME=inception
+# NAME=inception
 
 # Colors
 GREEN=\033[0;32m
